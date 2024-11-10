@@ -56,6 +56,7 @@ rewards. <br>
 <br>
 
 ```{r, out.width='50%', fig.align='center', fig.cap='The agent–environment interaction in a Markov decision process',  echo=FALSE}
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "RL.png", fileP)
 knitr::include_graphics(getP)
@@ -93,6 +94,7 @@ learning:**
 <br>
 
 ```{r, out.width='20%', fig.align='center',   echo=FALSE}
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "bee.png", fileP)
 knitr::include_graphics(getP)
@@ -102,6 +104,7 @@ knitr::include_graphics(getP)
 <div>
 
 ```{r, out.width='25%', fig.cap = "Patch01", fig.align='center',   echo=FALSE}
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "patch01.jpg", fileP)
 knitr::include_graphics(getP)
@@ -154,6 +157,7 @@ shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
 <div>
 
 ```{r, out.width='25%', fig.cap = "Patch02", fig.align='center',   echo=FALSE}
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "patch02.jpg", fileP)
 knitr::include_graphics(getP)
@@ -249,7 +253,7 @@ $\theta$ conformity bias(strength of conformity)
 <br>
 
 ```{r, out.width='50%', fig.cap = "Patial information in collective behavior", fig.align='center',   echo=FALSE}
-
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "partial.jpg", fileP)
 knitr::include_graphics(getP)
@@ -949,7 +953,7 @@ social_learning_model_data[1:6,]
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-
+library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "data.csv", fileP)
 
@@ -1027,12 +1031,15 @@ shinyApp(ui = ui, server = server)
 
 ```{r, echo=FALSE}
 
-library(shiny)
+
+
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-
-dataset <- read.csv("/Users/collectiveintelligence/Desktop/ESLR2024/RL/data.csv") # Replace with the actual path or URL
+library(rstudioapi)
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "data.csv", fileP)
+ # Replace with the actual path or URL
   
 
 
