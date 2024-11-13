@@ -307,7 +307,9 @@ Simplest action selection: *greedy* action selection
 $$
 A_{t}\doteq \arg\max_{a} Q_{a,t}
 $$ $\epsilon-greedy$ method
-
+<br>
+<br>
+<br>
 $$
    A_{t}\doteq 
    \left\{ \begin{array}{rcl}
@@ -315,14 +317,34 @@ $$
          \\ random & \epsilon.
          \end{array}\right.
 $$
-
+<br>
+<br>
+<br>
 Asocial:*softmax* function
 
+
+$$
+A_{t}\doteq \frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}
+$$
+<br>
+
+$\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
+
+
+
+<br>
+
+<br>
 ```{r, out.width='60%', fig.align='center', fig.cap='Sofmax function',  echo=FALSE}
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "softmax.png", fileP)
 knitr::include_graphics(getP)
 ```
+
+
+<br>
+
+<br>
 
 ### Multi-agent Reinforcement Learning
 
@@ -336,7 +358,6 @@ $$
 
 <br> 
 
-$\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
 
 $\sigma$ copying weight
 
