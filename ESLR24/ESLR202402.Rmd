@@ -35,6 +35,32 @@ library(rstudioapi)
 
 ```
 
+# Social Learning
+
+```{r,  out.width='50%', fig.align='center', fig.cap='classic social learning',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "individual.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+<br>
+
+```{r, out.width='50%', fig.align='center', fig.cap='collective social learning',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "collective.jpg", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+## Question
+
+#### If multiple agents learn simultaneously, how can we quantify this dynamic process?
+
+<br>
+
 # Outline
 
 -   Reinforcement Learning
@@ -45,18 +71,13 @@ library(rstudioapi)
 
 # Reinforcement Learning
 
-<br> Reinforcement learning concerns a family of problems in which an
-agent evolves while analyzing consequences of its actions, based on a
-simple scalar signal (the reinforcement) derived from the environment.
-The purpose of reinforcement learning is for the agent to learn an
-optimal (or near-optimal) policy that maximizes the reward function or
-other user-provided reinforcement signal that accumulates from immediate
-rewards. <br>
+### Individual RL
+
+<br> Reinforcement learning concerns a family of problems in which an agent evolves while analyzing consequences of its actions, based on a simple scalar signal (the reinforcement) derived from the environment. The purpose of reinforcement learning is for the agent to learn an optimal (or near-optimal) policy that maximizes the reward function or other user-provided reinforcement signal that accumulates from immediate rewards. <br>
 
 <br>
 
-```{r, out.width='50%', fig.align='center', fig.cap='The agent–environment interaction in a Markov decision process',  echo=FALSE}
-library(rstudioapi)
+```{r, out.width='70%', fig.align='center', fig.cap='The agent–environment interaction in a Markov decision process',  echo=FALSE}
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "RL.png", fileP)
 knitr::include_graphics(getP)
@@ -80,12 +101,21 @@ knitr::include_graphics(getP)
 
 <br>
 
-**Two most important distinguishing features of reinforcement
-learning:**
+**Two most important distinguishing features of reinforcement learning:**
 
 -   Trial-and-error search
 
 -   Delayed reward
+
+<br>
+
+<br>
+**Social reinforcement in complex contagion**
+```{r, out.width='40%', fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "compexcontagion.png", fileP)
+knitr::include_graphics(getP)
+```
 
 <br>
 
@@ -94,7 +124,6 @@ learning:**
 <br>
 
 ```{r, out.width='20%', fig.align='center',   echo=FALSE}
-library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "bee.png", fileP)
 knitr::include_graphics(getP)
@@ -104,7 +133,6 @@ knitr::include_graphics(getP)
 <div>
 
 ```{r, out.width='25%', fig.cap = "Patch01", fig.align='center',   echo=FALSE}
-library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "patch01.jpg", fileP)
 knitr::include_graphics(getP)
@@ -121,10 +149,10 @@ ui <- fluidPage(
     sidebarPanel(
   
     sliderInput("mean_adjust", label = "Mean adjustment:",
-              min = 1, max = 8, value = 4, step = 0.5),
+              min = 1, max = 8, value = 2, step = 0.5),
   
   sliderInput("sd_adjust", label = "sd adjustment:",
-              min = 0.01, max = 1, value = 0.5, step = 0.01),
+              min = 0.01, max = 10, value = 4, step = 0.01),
   actionButton("update", "Forage!")),
    mainPanel(
   plotOutput("plot"),
@@ -137,7 +165,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$plot <- renderPlot({
   randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
-  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(0,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch01 reward")
+  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(-10,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch01 reward")
 })
 
 output$reward <-renderText({ 
@@ -157,7 +185,6 @@ shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
 <div>
 
 ```{r, out.width='25%', fig.cap = "Patch02", fig.align='center',   echo=FALSE}
-library(rstudioapi)
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "patch02.jpg", fileP)
 knitr::include_graphics(getP)
@@ -174,10 +201,10 @@ ui <- fluidPage(
     sidebarPanel(
   
     sliderInput("mean_adjust", label = "Mean adjustment:",
-              min = 1, max = 8, value = 5, step = 0.5),
+              min = 1, max = 8, value = 6, step = 0.5),
   
   sliderInput("sd_adjust", label = "sd adjustment:",
-              min = 0.01, max = 1, value = 0.5, step = 0.01),
+              min = 0.01, max = 1, value = 0.2, step = 0.01),
   actionButton("update", "Forage!")),
    mainPanel(
   plotOutput("plot"),
@@ -190,7 +217,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$plot <- renderPlot({
   randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
-  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(0,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch02 reward")
+  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(-10,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch02 reward")
 })
 
 output$reward <-renderText({ 
@@ -208,43 +235,116 @@ shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
 </div>
 :::::
 
-
-<br> 
-<br>
-
-
+<br> <br>
 
 ### Model-free reinforcement learning: Q-learning
 
-In reinforcement learning, learning is essentially the evaluation of
-actions (not from correct instructions). Q-learning is based on the Temporal Differences and used to determine an
-optimal policy. It doesn't require the knowledge of probability
-transitions from a state to another and is model-free. <br> <br> **Value
-function: Rescorla-Wagner rule** <br> <br> $$
+In reinforcement learning, learning is essentially the evaluation of actions (not from correct instructions). Q-learning is based on the Temporal Differences and used to determine an optimal policy. It doesn't require the knowledge of probability transitions from a state to another and is model-free.
+
+<br>
+
+**basic Q learning Model**
+
+$$
+Q_{s,a,t}\leftarrow Q_{s,a,t} + \alpha(r_{a,t}+\gamma\max a Q_{a,t}-Q_{a,t})
+$$
+
+<br>
+
+$Q_{a,t}$ current value
+
+$\alpha$ a step-size parameter influences learning rate $0 \leq \alpha \leq 1$
+
+$\gamma$ discount factor $0\leq\gamma<1$
+
+$\gamma$ discounts the value of future rewards compared to immediate rewards. A higher discount factor means that future rewards are more valuable, encouraging long-term beneficial actions over short-term gains. $gamma$ = 0, agent is myopic and only cares about the immediate reward. $gamma$ approaching 1, agent looks more ahead.
+
+<br>
+
+**Value function: Rescorla-Wagner rule** <br>
+
+$$
 Q_{a,t+1 }\leftarrow (1-\alpha)Q_{a,t } + \alpha\pi_{a,t}
 $$
 
-<br> $\alpha$ learning rate
+<br>
 
-$Q_{a,t}$ current value
+$$\pi_{a,t}\leftarrow r_{a,t}-Q_{a,t}$$
 
 $\pi_{a,t}$ prediction error <br>
 
 <br>
 
-**Choice Probability function**
+**From value to action: Action selection function**
 
-Asocial:softmax function
+Simplest action selection: *greedy* action selection
 
-Social: frequency-dependent strategy <br> $$
+<br>
+
+$$
+A_{t}\doteq \arg\max_{a} Q_{a,t}
+$$ $\epsilon-greedy$ method
+
+$$
+   A_{t}\doteq 
+   \left\{ \begin{array}{rcl}
+        \arg\max_{a} Q_{a,t} & 1-\epsilon,
+         \\ random & \epsilon.
+         \end{array}\right.
+$$
+
+Asocial:*softmax* function
+
+```{r, out.width='60%', fig.align='center', fig.cap='Sofmax function',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "softmax.png", fileP)
+knitr::include_graphics(getP)
+```
+
+### Multi-agent Reinforcement Learning
+
+Social: frequency-dependent strategy <br>
+
+$$
 P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}
-$$ <br> $\beta$ inverse temperature: stochasticity of
-action(exploration-exploitation tendency)
+$$ <br> $\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
 
 $\sigma$ copying weight
 
 $\theta$ conformity bias(strength of conformity)
 
+**Extended model:** **between states State-Value Function**
+
+<br>
+
+```{r, out.width='60%', fig.align='center', fig.cap='Policy evaluation',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "maze.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br> 
+Bellman Equation 
+
+describes the relationship between a current state's value and future states' values. <br>
+
+
+
+<br> 
+
+$$
+V_{s} = \max_{a}(R_{s,a}+\gamma\sum_{s^{'}} P(s^{'}|s,a)V_{s^{'}})
+$$
+
+<br> Q Value is updated: <br>
+
+$$
+Q_{s,a,t+1 }\leftarrow r_{s,a,t} + \gamma\sum s^{'}P(s^{'}|s,a) max a^{'}Q_{s^{'},a^{'},t}
+$$ Extended reading for details: Reinforcement Learning: An Introduction, 2nd edition by Richard S. Sutton and Andrew G.
+
+<br>
+
+<br>
 
 # Network
 
@@ -253,7 +353,7 @@ $\theta$ conformity bias(strength of conformity)
 <br>
 
 ```{r, out.width='50%', fig.cap = "Patial information in collective behavior", fig.align='center',   echo=FALSE}
-library(rstudioapi)
+
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "partial.jpg", fileP)
 knitr::include_graphics(getP)
@@ -303,9 +403,7 @@ plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere)
 #
 ```
 
-<br> 
-<br>
-
+<br> <br>
 
 ::::: {style="display: flex;"}
 <div>
@@ -456,16 +554,13 @@ shinyApp(ui = ui, server = server, options = list(height = 500, width = 450))
 </div>
 :::::
 
-
-<br> 
-<br>
+<br> <br>
 
 ## Simulating Multi-agent Reinforcement Learning
 
 ### Network setup
 
-Let's use the simple Erdos-Renyi random graph $G(n,p)$ as a
-demonstration.
+Let's use the simple Erdos-Renyi random graph $G(n,p)$ as a demonstration.
 
 **Erdos-Renyi random graph** $G(n,p)$
 
@@ -543,7 +638,9 @@ social_learning_model_data <-
 
 Noise add to learning parameters.Later parameter recovery test.
 
-Fix $\alpha$ to 0.3 <br>
+Fix $\alpha$ to 0.3
+
+<br>
 
 ```{r, eval = FALSE}
 
@@ -583,7 +680,9 @@ convert_base_to_prob = function (alphaRaw) {
 
 <br>
 
-Fix $\beta$ to 6 <br>
+Fix $\beta$ to 6
+
+<br>
 
 ```{r, eval = FALSE}
 
@@ -622,7 +721,7 @@ convert_base_to_prob = function (alphaRaw) {
 
 ### Matrix setup
 
-**Value matrix**
+**Value**
 
 Setup initial Q value
 
@@ -645,7 +744,7 @@ Q_initial = 4.5
       Q[,1:10,1] 
 ```
 
-<br> **Global action probability matrix**
+<br> **Global action probability**
 
 Setup initial p
 
@@ -670,7 +769,7 @@ netChoiceProb[,1:10,1]
       
 ```
 
-<br> **Action, reward and action probability matrices**
+<br> **Action, reward and action probability**
 
 ```{r, eval = FALSE}
 
@@ -681,7 +780,7 @@ bestChoiceProb <- matrix(nrow=group_size, ncol=horizon)
 
 ```
 
-<br> **Social frequency matrix**
+<br> **Social frequency**
 
 ```{r, eval = FALSE}
 
@@ -699,8 +798,7 @@ End of setup
 
 **Action**
 
-Each agent chooses one option based on their choice probability matrix,
-and update their choices in the action matrix.
+Each agent chooses one option based on their choice probability matrix, and update their choices in the action matrix.
 
 ```{r, eval = FALSE}
 
@@ -763,8 +861,7 @@ payoffs[,1:10]
 
 **Value**
 
-Value is then updated by
-$Q_{a,t+1 }\leftarrow (1-\alpha)Q_{a,t } + \alpha\pi_{a,t}$
+Value is then updated by $Q_{a,t+1 }\leftarrow (1-\alpha)Q_{a,t } + \alpha\pi_{a,t}$
 
 ```{r, eval = FALSE}
 
@@ -799,8 +896,7 @@ Q_initial = 4.5
 
 **Action probability**
 
-Value is updated by
-$P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}$
+Value is updated by $P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}$
 
 Asocial p:
 
@@ -821,8 +917,7 @@ Asocial p:
 
 Social p:
 
-1st, record social frequency based on the adjacency matrix of this time
-step
+1st, record social frequency based on the adjacency matrix of this time step
 
 ```{r, eval = FALSE}
 
@@ -929,7 +1024,7 @@ Record it:
           social_learning_model_data$averageReward[positionOfThisRun] = thisGroupPayoff
 ```
 
-**Final matrix**
+**Final results**
 
 ```{r, eval = FALSE}
 head(social_learning_model_data)
@@ -941,10 +1036,6 @@ social_learning_model_data[1:6,8] <- c(4.366376, 4.238600, 4.126742, 4.777364, 4
 social_learning_model_data[1:6,] 
 ```
 
-
-
-
-
 ### Plot
 
 ```{r, include=FALSE}
@@ -953,7 +1044,7 @@ social_learning_model_data[1:6,]
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-library(rstudioapi)
+
 fileP = getSourceEditorContext()$path
 getP <- gsub("ESLR202402.Rmd", "data.csv", fileP)
 
@@ -1031,15 +1122,12 @@ shinyApp(ui = ui, server = server)
 
 ```{r, echo=FALSE}
 
-
-
+library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
-library(rstudioapi)
-fileP = getSourceEditorContext()$path
-getP <- gsub("ESLR202402.Rmd", "data.csv", fileP)
- # Replace with the actual path or URL
+
+dataset <- read.csv("/Users/collectiveintelligence/Desktop/ESLR2024/RL/data.csv") # Replace with the actual path or URL
   
 
 
@@ -1113,47 +1201,14 @@ shinyApp(ui = ui, server = server)
 
 ```
 
-
-
-
-
-
 ## References
 
-Toyokawa, W., Whalen, A., & Laland, K. N. (2019). Social learning
-strategies regulate the wisdom and madness of interactive crowds. Nature
-human behaviour, 3(2), 183-193.
+Toyokawa, W., Whalen, A., & Laland, K. N. (2019). Social learning strategies regulate the wisdom and madness of interactive crowds. Nature human behaviour, 3(2), 183-193.
 
-Wilson, R. C., & Collins, A. G. (2019). Ten simple rules for the
-computational modeling of behavioral data. Elife, 8, e49547.
+Wilson, R. C., & Collins, A. G. (2019). Ten simple rules for the computational modeling of behavioral data. Elife, 8, e49547.
 
-Sutton, R. S. (2018). Reinforcement learning: An introduction. A
-Bradford Book.
+Sutton, R. S. (2018). Reinforcement learning: An introduction. A Bradford Book.
 
 Newman, M. (2018). Networks. Oxford university press.
 
-Barabási, A. L. (2013). Network science. Philosophical Transactions of
-the Royal Society A: Mathematical, Physical and Engineering Sciences,
-371(1987), 20120375.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Barabási, A. L. (2013). Network science. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences, 371(1987), 20120375.
