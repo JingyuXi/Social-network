@@ -1,0 +1,1261 @@
+---
+title: "ESLR 2024 Multi-agent Reinforcement Learning with a Static Graph"
+output: html_document
+date: "`r Sys.Date()`"
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+  
+  )
+```
+
+```{css, echo=FALSE}
+.output{
+  background-color:white;
+  border: 1px solid black;
+  font-weight: bold;
+}
+```
+
+```{r class.source="output",eval = FALSE, include = FALSE}
+alpha_base <- convert_prob_to_base(alpha)
+```
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(igraph)
+library(tidyverse)
+library(shiny)
+library(rstudioapi)
+
+```
+
+# Social Learning
+
+```{r,  out.width='50%', fig.align='center', fig.cap='classic social learning',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "individual.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+<br>
+
+```{r, out.width='50%', fig.align='center', fig.cap='collective social learning',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "collective.jpg", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+## Question
+
+#### If multiple agents learn simultaneously, how can we quantify this dynamic process?
+
+<br>
+
+# Outline
+
+-   Reinforcement Learning
+
+-   Network
+
+-   Simulating Multi-agent Reinforcement Learning
+
+# Reinforcement Learning
+
+### Individual RL
+
+<br> Reinforcement learning concerns a family of problems in which an agent evolves while analyzing consequences of its actions, based on a simple scalar signal (the reinforcement) derived from the environment. The purpose of reinforcement learning is for the agent to learn an optimal (or near-optimal) policy that maximizes the reward function or other user-provided reinforcement signal that accumulates from immediate rewards. <br>
+
+<br>
+
+```{r, out.width='70%', fig.align='center', fig.cap='The agent–environment interaction in a Markov decision process',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "RL.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+1 - at time step *t*, the agent is in state $S_{t}$,
+
+2 - agent chooses one of the possible actions in this state, $A_{t}$,
+
+3 - agent applies the action, what provokes,:
+
+-   the passage to a new state, $S_{t+1}$,
+
+-   the receipt of the reinforcement, $R_{t}$;
+
+4 - *t* \<- *t + 1*
+
+5 - go to 2 or stop if the new state is a terminal one.
+
+<br>
+
+**Two most important distinguishing features of reinforcement learning:**
+
+-   Trial-and-error search
+
+-   Delayed reward
+
+<br>
+
+<br>
+**Social reinforcement in complex contagion**
+```{r, out.width='40%', fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "compexcontagion.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+### k-armed bandit problem
+
+<br>
+
+```{r, out.width='20%', fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "bee.png", fileP)
+knitr::include_graphics(getP)
+```
+
+::::: {style="display: flex;"}
+<div>
+
+```{r, out.width='25%', fig.cap = "Patch01", fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "patch01.jpg", fileP)
+knitr::include_graphics(getP)
+```
+
+```{r, echo=FALSE}
+
+ui <- fluidPage(
+  
+  
+   sidebarLayout(
+
+    # Sidebar with a slider input
+    sidebarPanel(
+  
+    sliderInput("mean_adjust", label = "Mean adjustment:",
+              min = 1, max = 8, value = 2, step = 0.5),
+  
+  sliderInput("sd_adjust", label = "sd adjustment:",
+              min = 0.01, max = 10, value = 4, step = 0.01),
+  actionButton("update", "Forage!")),
+   mainPanel(
+  plotOutput("plot"),
+  textOutput("reward")
+   )
+))
+
+
+
+server <- function(input, output) {
+  output$plot <- renderPlot({
+  randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
+  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(0,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch01 reward")
+})
+
+output$reward <-renderText({ 
+    randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
+    sample(randomData,1)
+  }) |>
+    bindEvent(input$update)
+
+}
+
+shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
+
+```
+
+</div>
+
+<div>
+
+```{r, out.width='25%', fig.cap = "Patch02", fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "patch02.jpg", fileP)
+knitr::include_graphics(getP)
+```
+
+```{r, echo=FALSE}
+
+ui <- fluidPage(
+  
+  
+   sidebarLayout(
+
+    # Sidebar with a slider input
+    sidebarPanel(
+  
+    sliderInput("mean_adjust", label = "Mean adjustment:",
+              min = 1, max = 8, value = 6, step = 0.5),
+  
+  sliderInput("sd_adjust", label = "sd adjustment:",
+              min = 0.01, max = 1, value = 0.2, step = 0.01),
+  actionButton("update", "Forage!")),
+   mainPanel(
+  plotOutput("plot"),
+  textOutput("reward")
+   )
+))
+
+
+
+server <- function(input, output) {
+  output$plot <- renderPlot({
+  randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
+  hist(randomData, freq = TRUE,  breaks = 50,  xlim = c(-10,10), ylim = c(0,1000),xlab = "Reward", ylab = "Frequency",  main = "Patch02 reward")
+})
+
+output$reward <-renderText({ 
+    randomData <- rnorm(10000, mean = input$mean_adjust, sd = input$sd_adjust)
+    sample(randomData,1)
+  }) |>
+    bindEvent(input$update)
+
+}
+
+shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
+
+```
+
+</div>
+:::::
+
+<br> 
+
+
+## Task setup
+
+```{r, out.width='70%', fig.cap = "collective foraging setup", fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "task.png", fileP)
+knitr::include_graphics(getP)
+```
+
+
+
+
+
+
+
+
+
+<br>
+
+### Model-free reinforcement learning: Q-learning
+
+In reinforcement learning, learning is essentially the evaluation of actions (not from correct instructions). Q-learning is based on the Temporal Differences and used to determine an optimal policy. It doesn't require the knowledge of probability transitions from a state to another and is model-free.
+
+<br>
+
+**basic Q learning Model**
+
+$$
+Q_{s,a,t}\leftarrow Q_{s,a,t} + \alpha(r_{a,t}+\gamma\max a Q_{a,t}-Q_{a,t})
+$$
+
+<br>
+
+$Q_{a,t}$ current value
+
+$\alpha$ a step-size parameter influences learning rate $0 \leq \alpha \leq 1$
+
+$\gamma$ discount factor $0\leq\gamma<1$
+
+$\gamma$ discounts the value of future rewards compared to immediate rewards. A higher discount factor means that future rewards are more valuable, encouraging long-term beneficial actions over short-term gains. $gamma$ = 0, agent is myopic and only cares about the immediate reward. $gamma$ approaching 1, agent looks more ahead.
+
+<br>
+
+**Value function: Rescorla-Wagner rule** 
+
+<br>
+
+$$
+Q_{a,t+1 }\leftarrow Q_{a,t } + \alpha\pi_{a,t}
+$$
+
+<br>
+
+$$\pi_{a,t}\leftarrow r_{a,t}-Q_{a,t}$$
+
+$\pi_{a,t}$ prediction error 
+
+<br>
+
+<br>
+
+**From value to action: Action selection function**
+
+Simplest action selection: *greedy* action selection
+
+<br>
+
+$$
+A_{t}\doteq \arg\max_{a} Q_{a,t}
+$$ $\epsilon-greedy$ method
+
+$$
+   A_{t}\doteq 
+   \left\{ \begin{array}{rcl}
+        \arg\max_{a} Q_{a,t} & 1-\epsilon,
+         \\ random & \epsilon.
+         \end{array}\right.
+$$
+
+Asocial:*softmax* function
+
+```{r, out.width='60%', fig.align='center', fig.cap='Sofmax function',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "softmax.png", fileP)
+knitr::include_graphics(getP)
+```
+
+### Multi-agent Reinforcement Learning
+
+Social: frequency-dependent strategy 
+
+<br>
+
+$$
+P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}
+$$ 
+
+<br> 
+
+$\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
+
+$\sigma$ copying weight
+
+$\theta$ conformity bias(strength of conformity)
+
+**Extended model:** **between states State-Value Function**
+
+<br>
+
+```{r, out.width='60%', fig.align='center', fig.cap='Policy evaluation',  echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "maze.png", fileP)
+knitr::include_graphics(getP)
+```
+
+<br> 
+Bellman Equation 
+
+describes the relationship between a current state's value and future states' values. <br>
+
+
+
+<br> 
+
+$$
+V_{s} = \max_{a}(R_{s,a}+\gamma\sum_{s^{'}} P(s^{'}|s,a)V_{s^{'}})
+$$
+
+<br> Q Value is updated: <br>
+
+$$
+Q_{s,a,t+1 }\leftarrow r_{s,a,t} + \gamma\sum s^{'}P(s^{'}|s,a) max a^{'}Q_{s^{'},a^{'},t}
+$$ 
+Extended reading for details: Reinforcement Learning: An Introduction, 2nd edition by Richard S. Sutton and Andrew G.
+
+<br>
+
+<br>
+
+# Network
+
+<br>
+
+<br>
+
+```{r, out.width='50%', fig.cap = "Patial information in collective behavior", fig.align='center',   echo=FALSE}
+
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "partial.jpg", fileP)
+knitr::include_graphics(getP)
+```
+
+<br>
+
+<br>
+
+## Using network to represent diverse social interactions
+
+**Full graph**
+
+```{r, include = TRUE}
+
+g <- make_full_graph(40)
+plot(g, vertex.size=6, vertex.label=NA)
+```
+
+**Tree graph**
+
+```{r, include = TRUE}
+treeg <- make_tree(50, children = 8, mode = "undirected")
+
+plot(treeg, vertex.size=6, vertex.label=NA) 
+```
+
+**Star graph**
+
+```{r, include = TRUE}
+star <- make_star(40)
+plot(star, vertex.size=6, vertex.label=NA) 
+```
+
+**Erdos-Renyi random graph** $G(n,p)$
+
+```{r, eval = FALSE}
+#$G(n,p)$ graph
+gnp <- sample_gnp(n=100, p=.005)
+sphere <- layout_(gnp, on_sphere())
+plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere)
+```
+
+```{r, eval = FALSE, include = FALSE}
+# gnp.rewired <- rewire(gnp, each_edge(prob=0.1))
+# plot(gnp.rewired, vertex.size=6, vertex.label=NA, layout = sphere)
+#
+```
+
+<br> 
+<br>
+
+::::: {style="display: flex;"}
+<div>
+
+```{r, echo=FALSE}
+
+ui <- fluidPage(
+
+
+  actionButton("update", "Give me a Randim Graph!"),
+#
+  plotOutput("plot", height = 450, width = 450)
+  # plotOutput("rewirep", height = 450, width = 450)
+
+)
+
+# ui <- fluidPage(
+#   
+#   
+#    sidebarLayout(
+# 
+#     # Sidebar with a slider input
+#     sidebarPanel(
+#   
+#   actionButton("update", "Rewire!")),
+#    mainPanel(
+#   plotOutput("plot", height = 450, width = 450),
+#   plotOutput("rewirep", height = 450, width = 450)
+#    )
+# ))
+# 
+
+
+server <- function(input, output) {
+library(igraph)
+  
+
+    output$plot <- renderPlot({
+
+   gnp <- sample_gnp(n=100, p=.005)
+   sphere <- layout_(gnp, on_sphere())
+   plot(gnp, vertex.size=6, vertex.label=NA, layout = layout.sphere)
+
+  })|>
+     bindEvent(input$update)
+
+ 
+#    result <- eventReactive(input$update, {
+#   
+#    gnp <- sample_gnp(n=100, p=.005) 
+#    gnp.rewired <- rewire(gnp, each_edge(prob=0.1))
+#    })
+#  
+# output$rewirep <-renderPlot({
+#   
+#    rewirep <- plot(result(), vertex.size=6, vertex.label=NA, layout = sphere)
+#    
+#   }) |>
+#     bindEvent(input$update)
+
+# output$plot <-renderPlot({
+#   
+#    gnp <- sample_gnp(n=100, p=.005) 
+#    sphere <- layout_(gnp, on_sphere())
+#    plot <-plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere) 
+#   })
+# 
+# 
+
+}
+shinyApp(ui = ui, server = server, options = list(height = 500, width = 450))
+#shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
+
+```
+
+</div>
+
+<div>
+
+```{r, echo=FALSE}
+
+ui <- fluidPage(
+
+
+  actionButton("update", "Rewire!"),
+#
+# plotOutput("plot", height = 450, width = 450),
+  plotOutput("rewirep", height = 450, width = 450)
+
+)
+
+# ui <- fluidPage(
+#   
+#   
+#    sidebarLayout(
+# 
+#     # Sidebar with a slider input
+#     sidebarPanel(
+#   
+#   actionButton("update", "Rewire!")),
+#    mainPanel(
+#   plotOutput("plot", height = 450, width = 450),
+#   plotOutput("rewirep", height = 450, width = 450)
+#    )
+# ))
+
+server <- function(input, output) {
+library(igraph)
+  
+  
+  #   output$plot <- renderPlot({
+  #      
+  #  gnp <- sample_gnp(n=100, p=.005)
+  #  sphere <- layout_(gnp, on_sphere())
+  #  plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere) 
+  #   
+  # })
+  # 
+ 
+   result <- eventReactive(input$update, {
+  
+   gnp <- sample_gnp(n=100, p=.005) 
+   gnp.rewired <- rewire(gnp, each_edge(prob=0.1))
+   })
+ 
+output$rewirep <-renderPlot({
+  
+   rewirep <- plot(result(), vertex.size=6, vertex.label=NA, layout = layout.sphere)
+   
+  }) |>
+    bindEvent(input$update)
+
+# output$plot <-renderPlot({
+#   
+#    gnp <- sample_gnp(n=100, p=.005) 
+#    sphere <- layout_(gnp, on_sphere())
+#    plot <-plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere) 
+#   })
+# 
+# 
+
+}
+shinyApp(ui = ui, server = server, options = list(height = 500, width = 450))
+#shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
+
+```
+
+</div>
+:::::
+
+<br> 
+<br>
+
+## Simulating Multi-agent Reinforcement Learning
+
+### Network setup
+
+Let's use the simple Erdos-Renyi random graph $G(n,p)$ as a demonstration.
+
+**Erdos-Renyi random graph** $G(n,p)$
+
+Get the adjacency matrix for later social frequency calculation
+
+```{r, include = TRUE}
+# generate a G(n,p) graph
+gnp <- sample_gnp(n = 10, p = .5)
+
+# adjacency matrix
+gnp_adjMatrix <- get.adjacency(
+  gnp,
+  type = c("both"),
+)
+gnp_adjMatrix 
+plot(gnp, vertex.size=6, vertex.label=NA, layout = layout.sphere)
+
+```
+
+```{r, include = FALSE}
+# generate a G(n,p) graph
+
+gnp <- sample_gnp(n = 10, p = .25)
+plot(gnp, vertex.size=6, vertex.label=NA, layout = layout.sphere)
+```
+
+### Global setup
+
+```{r, include = TRUE}
+# Session Setup
+set.seed(6) 
+group_size = 10 
+repetition = 10 # number of repetition for a specific combination of parameters
+horizon = 100 # total steps of one session
+
+
+# Bandit Setup
+num_options = 2 # the number of arms
+mean_list = c(4, 5) 
+sd_list = c(1, 1)
+
+
+# RL parameter space
+Q_initial = 4.5 # prior belief
+alpha_list <- c(0.3, 0.5, 0.7)
+beta_list <- c(2, 4, 6)
+sigma_list <- seq(0, 1, 0.2)
+theta_list <- seq(1, 7, 2)
+
+
+```
+
+<br> 
+**Container ready for data recording**
+
+```{r, include = TRUE}
+
+
+social_learning_model_data <- 
+  data.frame(
+    
+    beta = rep(beta_list, times = 1, each = length(alpha_list)*length(sigma_list)*length(theta_list)*repetition*horizon)
+    , alpha = rep(alpha_list, times = length(beta_list), each = length(sigma_list)*length(theta_list)*repetition*horizon)
+    , sigma = rep(sigma_list, times = length(beta_list)*length(alpha_list), each = length(theta_list)*repetition*horizon)               
+    , theta = rep(theta_list, times = length(beta_list)*length(alpha_list)*length(sigma_list), each = repetition*horizon)               
+    , r = rep(1:repetition, times = length(beta_list)*length(alpha_list)*length(sigma_list)*length(theta_list), each = horizon)
+    , t = rep(1:horizon, times = length(beta_list)*length(alpha_list)*length(sigma_list)*length(theta_list), each = 1)
+    , bestChoiceProb = rep(NA, length(beta_list)*length(alpha_list)*length(sigma_list)*length(theta_list)*repetition*horizon)
+    , averageReward = rep(NA, length(beta_list)*length(alpha_list)*length(sigma_list)*length(theta_list)*repetition*horizon)
+  )
+
+
+```
+
+<br> 
+**Individual differences**
+
+Noise add to learning parameters.Later parameter recovery test.
+
+Fix $\alpha$ to 0.3
+
+<br>
+
+```{r, eval = FALSE}
+
+ # Setting individual learning parameters
+      alpha_base <- convert_prob_to_base(alpha)
+      this_alpha <- (alpha_base + rnorm(group_size, 0, 0.05)) %>% convert_base_to_prob
+      this_beta <- beta + rnorm(group_size, 0, 0.05)
+      
+```
+
+```{r, echo = FALSE }
+library(tidyverse)
+alpha = 0.3
+beta = 6
+group_size = 10
+
+
+## Converting function
+convert_prob_to_base = function (alpha) {
+    alpha[which(alpha < 1e-5)] <- 1e-5
+    alpha[which(alpha > 1 - 1e-5)] <- 1 - 1e-5
+    return (log(-alpha/(alpha-1)))
+}
+
+convert_base_to_prob = function (alphaRaw) {
+    alphaRaw[which(alphaRaw > 12)] <- 12
+    return( 1 / (1 + exp(-alphaRaw)))
+}
+
+
+ # Setting individual learning parameters
+      alpha_base <- convert_prob_to_base(alpha)
+      this_alpha <- (alpha_base + rnorm(group_size, 0, 0.05)) %>% convert_base_to_prob
+      this_alpha
+    
+```
+
+<br>
+
+Fix $\beta$ to 6
+
+<br>
+
+```{r, eval = FALSE}
+
+      this_beta <- beta + rnorm(group_size, 0, 0.05)
+      
+```
+
+```{r, echo = FALSE }
+library(tidyverse)
+alpha = 0.3
+beta = 6
+group_size = 10
+
+
+## Converting function
+convert_prob_to_base = function (alpha) {
+    alpha[which(alpha < 1e-5)] <- 1e-5
+    alpha[which(alpha > 1 - 1e-5)] <- 1 - 1e-5
+    return (log(-alpha/(alpha-1)))
+}
+
+convert_base_to_prob = function (alphaRaw) {
+    alphaRaw[which(alphaRaw > 12)] <- 12
+    return( 1 / (1 + exp(-alphaRaw)))
+}
+
+
+ # Setting individual learning parameters
+      
+      this_beta <- beta + rnorm(group_size, 0, 0.05)
+     
+      this_beta
+```
+
+<br>
+
+### Container setup
+
+**Value**
+
+Setup initial Q value
+
+```{r, eval = FALSE}
+
+      Q <- array(dim = c(num_options, horizon, group_size))
+      Q[,1,] <- Q_initial # Q_initial = 4.5
+      
+```
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+      Q <- array(dim = c(num_options, horizon, group_size))
+      Q[,1,] <- Q_initial # Q_initial = 4.5
+      Q[,1:10,1] 
+```
+
+<br> **Global action probability**
+
+Setup initial p
+
+```{r, eval = FALSE}
+
+netChoiceProb <- array(dim = c(num_options, horizon, group_size))
+netChoiceProb[,1,] <- 1/num_options
+
+      
+```
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+netChoiceProb <- array(dim = c(num_options, horizon, group_size))
+netChoiceProb[,1,] <- 1/num_options
+netChoiceProb[,1:10,1]
+      
+```
+
+<br> **Action, reward and action probability**
+
+```{r, eval = FALSE}
+
+
+choices <- matrix(nrow=group_size, ncol=horizon)
+payoffs <- matrix(nrow=group_size, ncol=horizon)
+bestChoiceProb <- matrix(nrow=group_size, ncol=horizon)
+
+```
+
+<br> **Social frequency**
+
+```{r, eval = FALSE}
+
+
+# social frequency matrix to track available social information in the environment
+      socialFrequency = matrix(nrow=num_options, ncol=horizon)
+   
+```
+
+End of setup
+
+<br>
+
+### Step 1, t = 1
+
+**Action**
+
+Each agent chooses one option based on their choice probability matrix, and update their choices in the action matrix.
+
+```{r, eval = FALSE}
+
+t <- 1
+   # A session starts for t in 1 : horizon
+      for (t in 1:horizon) {
+        # each agent chooses one option 
+        choices[,t] <- apply(netChoiceProb[,t,]
+                             , MARGIN = 2
+                             , function(netChoiceProbInstance){ 
+                               sample(1:num_options
+                                      , 1
+                                      , prob=netChoiceProbInstance
+                                      , replace=FALSE
+                               ) 
+                             }
+        )
+
+```
+
+Updated action matrix looks like:
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+choices <- matrix(nrow=group_size, ncol=horizon)
+choices[,1] <- c(2, 1, 1, 2, 2 ,2 ,2, 1, 1, 1)
+choices[,1:10]      
+```
+
+**Reward**
+
+Record the reward of the action of this step
+
+```{r, eval = FALSE}
+
+payoffs[,t] <- mapply(rnorm, 1, mean_list[choices[,t]], sd_list[choices[,t]])
+
+```
+
+Updated reward matrix looks like:
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+payoffs <- matrix(nrow=group_size, ncol=horizon)
+payoffs[,1] <- c(3.893331, 4.845328, 4.433069, 4.300975, 4.193934, 6.208168, 5.733692, 5.199272, 5.408271, 4.571809)
+
+payoffs[,1:10]      
+
+```
+
+**Value**
+
+Value is then updated by 
+
+$$
+Q_{a,t+1 }\leftarrow Q_{a,t } + \alpha\pi_{a,t}
+$$
+
+
+
+```{r, eval = FALSE}
+
+           Q <- rescorla_wagner_updating(t
+                                            , numoptions
+                                            , group_size
+                                            , horizon
+                                            , this_alpha
+                                            , choices[,t]
+                                            , payoffs[,t]
+                                            , Q
+              )
+              
+
+```
+
+Updated value matrix looks like:
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+      Q <- array(dim = c(num_options, horizon, group_size))
+      Q[,1,] <- Q_initial # Q_initial = 4.5
+      Q[,2,1] <- c( 4.500000, 4.083182) # Q_initial = 4.5
+      Q[,1:10,1]     
+  
+```
+
+**Action probability**
+
+Value is updated by $P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}$
+
+Asocial p:
+
+```{r, eval = FALSE}
+     
+              # Calculate each "exp( beta*Q_i )"
+              Q_exp = ( Q[,t+1,] * rep(this_beta, each = num_options) ) %>% exp() 
+              # Then, calculating the softmax probability
+              # exp( beta*Q_k )/(exp( beta*Q_1 ) + exp( beta*Q_2 )) for each slot
+              softmaxMatrix = Q_exp %>% 
+                apply(MARGIN=1
+                      , divideVector
+                      , denominator = apply(Q_exp, MARGIN=2, sum)
+                ) %>% 
+                t()
+              
+```
+
+Social p:
+
+1st, record social frequency based on the adjacency matrix of this time step
+
+```{r, eval = FALSE}
+
+ # read all matrices by col
+              # Take the choice by col of this step and convert to a n*n matrix
+              choiceMatrixThisT <- matrix(rep(choices[,t], times = group_size),nrow = group_size, ncol = group_size)
+              # Choice of this step*graph of this step, get social frequency of each node by col
+              SocialChoiceMat<- hadamard.prod(g, choiceMatrixThisT)
+              
+              # Count the social frequency for each node this step, matrix is this step, 
+              # 0 is the lable of no SocialInfo, number bigger than 0 are choice labels
+              FrequencyThisT <- apply(SocialChoiceMat, 2, function(x) table(factor(x,levels=1:num_options)))
+              
+              # record this step to both thisT and NextT, use accordingly
+              # In this sim, nodes sample social frequency from t-1 step so use socialFrequencyNextT in later updating
+              socialFrequencyThisT[,,t] <- socialFrequencyThisT[,,t] + FrequencyThisT # The real frequncy 
+              socialFrequencyNextT[,,t+1] <- socialFrequencyNextT[,,t+1] + FrequencyThisT # The perceived frequency in this sim
+
+```
+
+2nd, calculate the social p
+
+```{r, eval = FALSE}
+
+       # ------ Calculating the social influence --------
+              
+              freqDepenMatrix <- 
+                SN_frequencyDependent(socialFrequencyNextT[,,t+1]
+                                      , choices[,t]
+                                      , this_theta
+                                      , num_options
+                )
+
+```
+
+Asocial + social
+
+```{r, eval = FALSE}
+
+              netMatrix <- 
+                apply(softmaxMatrix, 1, multiplying, A=(1-this_sigma)) %>%
+                t() + 
+                apply(freqDepenMatrix, 1, multiplying, A=this_sigma) %>% 
+                t()
+
+              netChoiceProbAperm = aperm(netChoiceProb, c(1,3,2))
+              dim(netChoiceProbAperm) = c(num_options*group_size, horizon)
+              dim(netMatrix) = c(num_options*group_size, 1)
+              netChoiceProbAperm[,t+1] = netMatrix
+              dim(netChoiceProbAperm) = c(num_options, group_size, horizon)
+              netChoiceProb = aperm(netChoiceProbAperm, c(1,3,2))
+
+
+```
+
+Updated global action probability matrix looks like:
+
+```{r, echo = FALSE }
+
+num_options = 2
+horizon = 100
+group_size = 10
+Q_initial = 4.5
+
+netChoiceProb <- array(dim = c(num_options, horizon, group_size))
+netChoiceProb[,1,] <- 1/num_options
+netChoiceProb[,2,1] <- c( 0.9891614 , 0.0108386)
+netChoiceProb[,1:10,1]
+
+```
+
+End of first step.
+
+### Step 2, t = 2
+
+Loop t
+
+End of 100 step.
+
+**Record this step** Summarize this step:
+
+```{r, eval = FALSE}
+best_mean <- which.max(mean_list)
+          
+          for(i in 1:group_size) {
+            bestMeanProb[i,] <- netChoiceProb[best_mean,,i]
+          }
+          thisGroupPerformance = apply(bestMeanProb, MARGIN = 2, mean)
+          thisGroupPayoff = apply(payoffs, MARGIN = 2, mean)  
+          # Second, let's record this in the data set you defined 
+          # We first find a position where new data should be recorded
+          positionOfThisRun = which(social_learning_model_data$beta == beta & 
+                                      social_learning_model_data$alpha == alpha &
+                                      social_learning_model_data$sigma == sigma & 
+                                      social_learning_model_data$theta == theta & 
+                                      social_learning_model_data$r == r) 
+```
+
+Record it:
+
+```{r, eval = FALSE}
+
+          social_learning_model_data$bestMeanProb[positionOfThisRun] = thisGroupPerformance
+          social_learning_model_data$averageReward[positionOfThisRun] = thisGroupPayoff
+```
+
+**Final results**
+
+```{r, eval = FALSE}
+head(social_learning_model_data)
+```
+
+```{r, echo = FALSE}
+social_learning_model_data[1:6,7] <- c(0.5000000, 0.5784940, 0.6244481, 0.6990323, 0.7338047, 0.7176836)
+social_learning_model_data[1:6,8] <- c(4.366376, 4.238600, 4.126742, 4.777364, 4.410486, 4.919184)
+social_learning_model_data[1:6,] 
+```
+
+          
+
+<br>
+
+<br>
+
+
+### Plot
+
+```{r, include=FALSE}
+
+
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "data.csv", fileP)
+
+
+dataset <- read.csv(getP) # Replace with the actual path or URL
+
+ui <- fluidPage(
+  
+  
+   sidebarLayout(
+
+    # Sidebar with a slider input
+    sidebarPanel(
+
+    sliderInput("alpha_adjust", label = "alpha:",
+              min = 0.2, max = 0.8, value = 0.2, step = 0.1),
+
+    sliderInput("beta_adjust", label = "beta:",
+              min = 2, max = 8, value = 2, step = 1)
+    # 
+    # sliderInput("sigma_adjust", label = "sigma:",
+    #           min = 0, max = 1, value = 1, step = 0.1),
+    # 
+    # sliderInput("theta_adjust", label = "theta:",
+    #           min = 0.01, max = 1, value = 0.5, step = 0.01)
+),
+   mainPanel(
+  plotOutput("plot")
+
+   )
+))
+
+
+
+# Define server logic
+server <- function(input, output, session) {
+
+  # Reactive dataset filtering
+  filteredData <- reactive({
+    req(input$alpha_adjust, input$beta_adjust)  # Ensure inputs are provided
+    dataset %>%
+      filter(beta == input$beta_adjust &  alpha == input$alpha_adjust)
+  })
+  
+ 
+  # Create the plot
+output$plot <- renderPlot({
+  
+  
+    req(filteredData())
+  
+    ggplot(filteredData()) +
+    geom_hline(yintercept = 0.5, linetype = 'dashed') +
+    geom_line(aes(t, riskyChoiceProb_globalMean, colour = as.factor(sigma))) +
+    scale_colour_viridis_d() +
+    ylim(c(0,1))+
+    labs(x = 'Steps'
+         , y = '% Risky action'
+         , colour = 'Inverse\nTemperature'
+         , title = 'Social learning model') +
+    facet_grid(. ~ theta) +
+    theme_test() 
+
+
+  })
+
+}
+
+
+shinyApp(ui = ui, server = server)
+
+
+
+```
+
+```{r, echo=FALSE}
+
+library(shiny)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+
+dataset <- read.csv("/Users/collectiveintelligence/Desktop/ESLR2024/RL/data.csv") # Replace with the actual path or URL
+  
+
+
+
+ui <- fluidPage(
+  
+  
+   sidebarLayout(
+
+    # Sidebar with a slider input
+    sidebarPanel(
+
+    # sliderInput("alpha_adjust", label = "alpha:",
+    #           min = 0.2, max = 0.8, value = 0.2, step = 0.1),
+    # 
+    # sliderInput("beta_adjust", label = "beta:",
+    #           min = 2, max = 8, value = 2, step = 1)
+
+    sliderInput("sigma_adjust", label = "sigma:",
+               min = 0, max = 1, value = 0.6, step = 0.2),
+
+    sliderInput("theta_adjust", label = "theta:",
+              min = 1, max = 7, value = 3, step = 2)
+),
+   mainPanel(
+  plotOutput("plot")
+
+   )
+))
+
+
+
+# Define server logic
+server <- function(input, output, session) {
+
+  # Reactive dataset filtering
+  filteredData <- reactive({
+    req(input$sigma_adjust, input$theta_adjust)  # Ensure inputs are provided
+    dataset %>%
+      filter(sigma == input$sigma_adjust &  theta == input$theta_adjust)
+  })
+  
+ 
+  # Create the plot
+output$plot <- renderPlot({
+  
+  
+    req(filteredData())
+  
+    ggplot(filteredData()) +
+    geom_hline(yintercept = 0.5, linetype = 'dashed') +
+    geom_line(aes(t, riskyChoiceProb_globalMean, colour = as.factor(beta))) +
+    scale_colour_viridis_d() +
+    ylim(c(0,1))+
+    labs(x = 'Steps'
+         , y = '% Optimal action'
+         , colour = 'Inverse\nTemperature'
+         , title = 'Social learning model') +
+    facet_grid(. ~ alpha) +
+    theme_test() 
+
+
+  })
+
+}
+
+
+shinyApp(ui = ui, server = server)
+
+
+
+```
+
+## References
+
+Toyokawa, W., Whalen, A., & Laland, K. N. (2019). Social learning strategies regulate the wisdom and madness of interactive crowds. Nature human behaviour, 3(2), 183-193.
+
+Wilson, R. C., & Collins, A. G. (2019). Ten simple rules for the computational modeling of behavioral data. Elife, 8, e49547.
+
+Sutton, R. S. (2018). Reinforcement learning: An introduction. A Bradford Book.
+
+Newman, M. (2018). Networks. Oxford university press.
+
+Barabási, A. L. (2013). Network science. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences, 371(1987), 20120375.
