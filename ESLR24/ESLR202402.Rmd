@@ -236,6 +236,24 @@ shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
 :::::
 
 <br> 
+
+
+## Task setup
+
+```{r, out.width='70%', fig.cap = "collective foraging setup", fig.align='center',   echo=FALSE}
+fileP = getSourceEditorContext()$path
+getP <- gsub("ESLR202402.Rmd", "task.png", fileP)
+knitr::include_graphics(getP)
+```
+
+
+
+
+
+
+
+
+
 <br>
 
 ### Model-free reinforcement learning: Q-learning
@@ -308,7 +326,9 @@ knitr::include_graphics(getP)
 
 ### Multi-agent Reinforcement Learning
 
-Social: frequency-dependent strategy <br>
+Social: frequency-dependent strategy 
+
+<br>
 
 $$
 P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}
@@ -1055,6 +1075,13 @@ social_learning_model_data[1:6,7] <- c(0.5000000, 0.5784940, 0.6244481, 0.699032
 social_learning_model_data[1:6,8] <- c(4.366376, 4.238600, 4.126742, 4.777364, 4.410486, 4.919184)
 social_learning_model_data[1:6,] 
 ```
+
+          
+
+<br>
+
+<br>
+
 
 ### Plot
 
