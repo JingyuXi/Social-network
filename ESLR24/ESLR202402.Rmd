@@ -235,7 +235,8 @@ shinyApp(ui = ui, server = server, options = list(height = 800, width = 500))
 </div>
 :::::
 
-<br> <br>
+<br> 
+<br>
 
 ### Model-free reinforcement learning: Q-learning
 
@@ -261,17 +262,21 @@ $\gamma$ discounts the value of future rewards compared to immediate rewards. A 
 
 <br>
 
-**Value function: Rescorla-Wagner rule** <br>
+**Value function: Rescorla-Wagner rule** 
+
+<br>
 
 $$
-Q_{a,t+1 }\leftarrow (1-\alpha)Q_{a,t } + \alpha\pi_{a,t}
+Q_{a,t+1 }\leftarrow Q_{a,t } + \alpha\pi_{a,t}
 $$
 
 <br>
 
 $$\pi_{a,t}\leftarrow r_{a,t}-Q_{a,t}$$
 
-$\pi_{a,t}$ prediction error <br>
+$\pi_{a,t}$ prediction error 
+
+<br>
 
 <br>
 
@@ -307,7 +312,11 @@ Social: frequency-dependent strategy <br>
 
 $$
 P_{a,t+1 } = (1-\sigma)\frac{exp(\beta Q_{a,t})}{\sum exp(\beta Q_{k,t})}+\sigma\frac{N_{a,t}^\theta}{\sum N_{k,t}^\theta}
-$$ <br> $\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
+$$ 
+
+<br> 
+
+$\beta$ inverse temperature: stochasticity of action(exploration-exploitation tendency)
 
 $\sigma$ copying weight
 
@@ -340,7 +349,8 @@ $$
 
 $$
 Q_{s,a,t+1 }\leftarrow r_{s,a,t} + \gamma\sum s^{'}P(s^{'}|s,a) max a^{'}Q_{s^{'},a^{'},t}
-$$ Extended reading for details: Reinforcement Learning: An Introduction, 2nd edition by Richard S. Sutton and Andrew G.
+$$ 
+Extended reading for details: Reinforcement Learning: An Introduction, 2nd edition by Richard S. Sutton and Andrew G.
 
 <br>
 
@@ -403,7 +413,8 @@ plot(gnp, vertex.size=6, vertex.label=NA, layout = sphere)
 #
 ```
 
-<br> <br>
+<br> 
+<br>
 
 ::::: {style="display: flex;"}
 <div>
@@ -554,7 +565,8 @@ shinyApp(ui = ui, server = server, options = list(height = 500, width = 450))
 </div>
 :::::
 
-<br> <br>
+<br> 
+<br>
 
 ## Simulating Multi-agent Reinforcement Learning
 
@@ -613,7 +625,8 @@ theta_list <- seq(1, 7, 2)
 
 ```
 
-<br> **Container ready for data recording**
+<br> 
+**Container ready for data recording**
 
 ```{r, include = TRUE}
 
@@ -634,7 +647,8 @@ social_learning_model_data <-
 
 ```
 
-<br> **Individual differences**
+<br> 
+**Individual differences**
 
 Noise add to learning parameters.Later parameter recovery test.
 
@@ -719,7 +733,7 @@ convert_base_to_prob = function (alphaRaw) {
 
 <br>
 
-### Matrix setup
+### Container setup
 
 **Value**
 
@@ -861,7 +875,13 @@ payoffs[,1:10]
 
 **Value**
 
-Value is then updated by $Q_{a,t+1 }\leftarrow (1-\alpha)Q_{a,t } + \alpha\pi_{a,t}$
+Value is then updated by 
+
+$$
+Q_{a,t+1 }\leftarrow Q_{a,t } + \alpha\pi_{a,t}
+$$
+
+
 
 ```{r, eval = FALSE}
 
